@@ -2,7 +2,7 @@
 <html lang="ar">
 <head>
     <meta charset="UTF-8">
-    <title>لوحة الدراسة الفاخرة – Dr Mohamed</title>
+    <title>لوحة الدراسة الفاخرة</title>
     <!--
         تم تصميم هذه الصفحة لتكون لوحة دراسة متكاملة على غرار الأدوات الاحترافية مثل Flocus وغيرها من
         منصات الإنتاجية. تجمع الصفحة بين مؤقت بومودورو، قائمة مهام، عداد جلسات، عد تنازلي للامتحان،
@@ -60,9 +60,44 @@
             text-align: center;
             margin-bottom: 10px;
         }
+        /* حاوية الحلقة الدائرية التى تمثل تقدم الجلسة */
+        #progressContainer {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 10px auto;
+        }
+        /* الدائرة الخارجية للرسم البيانى للوقت */
+        #progressRingCircle {
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+            transition: stroke-dashoffset 1s linear;
+            position: relative;
+            z-index: 0;
+        }
+        /* كرة الكوكب داخل الحلقة */
+        #planetSphere {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(0, 200, 255, 0.9), rgba(0, 80, 150, 0.9));
+            box-shadow: 0 0 15px rgba(0, 200, 255, 0.6);
+            z-index: 1;
+        }
+        /* رقم المؤقت يوضع فوق الكوكب */
         #timer {
-            font-size: 72px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 42px;
             font-weight: bold;
+            color: #fff;
+            z-index: 2;
         }
         #sessionCount {
             font-size: 20px;
@@ -171,7 +206,15 @@
             <!-- الجهة اليسرى: المؤقت والاقتباس -->
             <div class="left-pane">
                 <div id="timerDisplay">
-                    <div id="timer">25:00</div>
+                    <div id="progressContainer">
+                        <svg id="progressRing" width="200" height="200">
+                            <circle id="progressRingCircle" stroke="#00aaff" stroke-width="8" fill="transparent" r="90" cx="100" cy="100"></circle>
+                        </svg>
+                        <!-- كرة كوكب مُصممة باستخدام CSS فى مركز الحلقة -->
+                        <div id="planetSphere"></div>
+                        <!-- المؤقت الرقمى فوق الكوكب -->
+                        <div id="timer">25:00</div>
+                    </div>
                     <div id="sessionCount">جلسات مكتملة: 0</div>
                 </div>
                 <div id="quote">اضغط على زر البدء لبدء جلسة بومودورو</div>
@@ -222,28 +265,51 @@
 
         // قائمة اقتباسات (مجموعة مختصرة من الملف السابق – يمكن تكرارها لتصل إلى مئات)
         const quotes = [
-            // آيات
-            'دكتور محمد، اقْرَأْ بِاسْمِ رَبِّكَ الَّذِي خَلَقَ... عَلَّمَ الْإِنسَانَ مَا لَمْ يَعْلَمْ',
-            'دكتور محمد، يَرْفَعِ اللهُ الَّذِينَ آمَنُوا مِنكُمْ وَالَّذِينَ أُوتُوا الْعِلْمَ دَرَجَاتٍ',
-            // أحاديث
-            'دكتور محمد، طَلَبُ الْعِلْمِ فَرِيضَةٌ عَلَى كُلِّ مُسْلِمٍ',
-            'دكتور محمد، مَنْ سَلَكَ طَرِيقًا يَلْتَمِسُ فِيهِ عِلْمًا سَهَّلَ اللَّهُ لَهُ طَرِيقًا إِلَى الْجَنَّةِ',
-            // عربية
-            'دكتور محمد، العلم نور والمذاكرة طريق النجاح.',
-            'دكتور محمد، الوقت هو الحياة؛ أحسن استغلاله.',
-            // إنجليزية
-            'Dr Mohamed, success is not final; failure is not fatal; it’s the courage to continue that counts.',
-            'Dr Mohamed, don’t stop until you’re proud.',
-            'Dr Mohamed, be stronger than your excuses.',
-            'Dr Mohamed, allow yourself to be a beginner; no one starts off being excellent.',
-            // ألمانية
-            'Dr Mohamed, Du schaffst es! – You can do it!',
-            'Dr Mohamed, Gib nicht auf! – Don’t give up!',
-            'Dr Mohamed, Auch aus Steinen, die einem in den Weg gelegt werden, kann man Schönes bauen.'
+            // آيات قرآنية
+            'اقْرَأْ بِاسْمِ رَبِّكَ الَّذِي خَلَقَ... عَلَّمَ الْإِنسَانَ مَا لَمْ يَعْلَمْ',
+            'يَرْفَعِ اللهُ الَّذِينَ آمَنُوا مِنكُمْ وَالَّذِينَ أُوتُوا الْعِلْمَ دَرَجَاتٍ',
+            // أحاديث نبوية
+            'طَلَبُ الْعِلْمِ فَرِيضَةٌ عَلَى كُلِّ مُسْلِمٍ',
+            'مَنْ سَلَكَ طَرِيقًا يَلْتَمِسُ فِيهِ عِلْمًا سَهَّلَ اللَّهُ لَهُ طَرِيقًا إِلَى الْجَنَّةِ',
+            // حكم عربية
+            'العلم نور والمذاكرة طريق النجاح.',
+            'الوقت هو الحياة؛ أحسن استغلاله.',
+            // اقتباسات إنجليزية
+            'Success is not final; failure is not fatal; it’s the courage to continue that counts.',
+            'Don’t stop until you’re proud.',
+            'Be stronger than your excuses.',
+            'Allow yourself to be a beginner; no one starts off being excellent.',
+            // اقتباسات ألمانية مع ترجمة
+            'Du schaffst es! – You can do it!',
+            'Gib nicht auf! – Don’t give up!',
+            'Auch aus Steinen, die einem in den Weg gelegt werden, kann man Schönes bauen.'
         ];
         // إذا أردت عدداً أكبر من الاقتباسات، قم بتكرار المصفوفة عدة مرات
         while (quotes.length < 1000) {
             quotes.push(...quotes);
+        }
+
+        // مدة الجلسة الكاملة بالثوانى (25 دقيقة)
+        const fullSessionDuration = 25 * 60;
+        // متغيرات خاصة بحلقة التقدم
+        let circle, radius, circumference;
+
+        // تهيئة الدائرة عند تحميل الصفحة
+        function initProgressRing() {
+            circle = document.getElementById('progressRingCircle');
+            if (!circle) return;
+            radius = circle.r.baseVal.value;
+            circumference = 2 * Math.PI * radius;
+            circle.style.strokeDasharray = `${circumference} ${circumference}`;
+            circle.style.strokeDashoffset = circumference;
+        }
+
+        // تحديث الحلقة وفقاً لما تبقى من وقت
+        function updateProgressRing() {
+            if (!circle || !circumference) return;
+            const percent = 1 - (remainingSeconds / fullSessionDuration);
+            const offset = circumference - percent * circumference;
+            circle.style.strokeDashoffset = offset;
         }
 
         // روابط قوائم تشغيل/فيديوهات يوتيوب لأصوات بيئية ولوفى. اخترنا أصوات أمواج، مطر، نار وLoFi.
@@ -335,6 +401,8 @@
             document.getElementById('startButton').disabled = true;
             document.getElementById('pauseButton').textContent = 'إيقاف مؤقت';
             updateTimerDisplay();
+            // إعادة تعيين حلقة التقدم عند بدء الجلسة
+            updateProgressRing();
             // تشغيل اقتباس جديد كل دقيقة
             displayRandomQuote();
             if (quoteInterval) clearInterval(quoteInterval);
@@ -363,6 +431,8 @@
                         }
                     }
                     updateTimerDisplay();
+                    // تحديث حلقة التقدم كل ثانية
+                    updateProgressRing();
                 }
             }, 1000);
         }
@@ -372,6 +442,8 @@
             const mins = Math.floor(remainingSeconds / 60).toString().padStart(2, '0');
             const secs = (remainingSeconds % 60).toString().padStart(2, '0');
             document.getElementById('timer').textContent = `${mins}:${secs}`;
+            // تحديث حلقة التقدم فى كل تحديث
+            updateProgressRing();
         }
         // إيقاف/استئناف المؤقت
         function togglePause() {
@@ -404,6 +476,10 @@
                 player.src = url;
                 container.style.display = 'block';
                 soundPlaying = true;
+                // افتح الرابط فى علامة تبويب جديدة لكى يتمكن المستخدم من تشغيل الصوت بسهولة
+                // نستخدم عنواناً بدون معاملات autoplay/loop حتى يظهر الفيديو العادى للمستخدم
+                const cleanUrl = url.split('?')[0];
+                window.open(cleanUrl, '_blank');
             } else {
                 player.src = '';
                 container.style.display = 'none';
@@ -429,11 +505,13 @@
         setInterval(updateExamCountdown, 1000);
         updateExamCountdown();
 
-        // تحميل المهام عند فتح الصفحة
-        loadTasks();
-        // تغيير الخلفية والاقتباس عند تحميل الصفحة لأول مرة
-        changeBackground();
-        displayRandomQuote();
+        // عند تحميل الصفحة لأول مرة، هيئ الحلقة وحمّل المهام وعيّن الخلفية والاقتباس
+        window.addEventListener('load', () => {
+            initProgressRing();
+            loadTasks();
+            changeBackground();
+            displayRandomQuote();
+        });
     </script>
 </body>
 </html>
