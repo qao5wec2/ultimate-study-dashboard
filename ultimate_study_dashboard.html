@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>لوحة الدراسة الفاخرة – Dr Mohamed</title>
+    <!--
+        تم تصميم هذه الصفحة لتكون لوحة دراسة متكاملة على غرار الأدوات الاحترافية مثل Flocus وغيرها من
+        منصات الإنتاجية. تجمع الصفحة بين مؤقت بومودورو، قائمة مهام، عداد جلسات، عد تنازلي للامتحان،
+        اقتباسات متعددة اللغات، خلفيات متحركة وصور مظلمة عالية الجودة، وصوتيات بيئية مثل أمواج البحر
+        والمطر. كل هذه العناصر مجمعة فى ملف HTML واحد يمكن رفعه مباشرة إلى GitHub Pages.
+    -->
+    <style>
+        /* الأساسيات */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            font-family: "Segoe UI", Tahoma, sans-serif;
+            color: #fff;
+            background-color: #0e0e23; /* fallback dark colour */
+        }
+        /* حاوية الخلفية المتحركة */
+        body {
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: background-image 1s ease-in-out;
+            animation: slowPan 60s linear infinite;
+        }
+        /* حركة بطيئة للخلفية لإضفاء إحساس بالحركة الهادئة */
+        @keyframes slowPan {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 10% 10%; }
+        }
+        /* طبقة شفافة تغطى المحتوى لإبراز النصوص على خلفية داكنة */
+        .overlay {
+            position: relative;
+            background-color: rgba(0, 0, 0, 0.6);
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 90vw;
+            max-height: 90vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            overflow-y: auto;
+        }
+        /* تخطيط صفحتنا: نقسم المحتوى إلى قسمين بمرونة */
+        .flex-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        .left-pane, .right-pane {
+            flex: 1 1 300px;
+            min-width: 280px;
+        }
+        /* مؤقت بومودورو والعداد */
+        #timerDisplay {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        #timer {
+            font-size: 72px;
+            font-weight: bold;
+        }
+        #sessionCount {
+            font-size: 20px;
+            margin-top: 5px;
+        }
+        /* الاقتباس */
+        #quote {
+            font-size: 32px;
+            line-height: 1.4;
+            margin: 20px 0;
+        }
+        /* أزرار التحكم */
+        .controls button {
+            font-size: 18px;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            transition: background-color 0.3s;
+        }
+        .controls button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        #startButton { background-color: #28a745; }
+        #startButton:hover:not(:disabled) { background-color: #218838; }
+        #pauseButton { background-color: #ffc107; color: #000; }
+        #pauseButton:hover { background-color: #e0a800; }
+        #soundButton { background-color: #007bff; }
+        #soundButton:hover { background-color: #0069d9; }
+        #todoSection h3 {
+            margin: 5px 0;
+        }
+        /* تنسيق قائمة المهام */
+        #taskInput {
+            width: 100%;
+            padding: 8px;
+            border-radius: 4px;
+            border: none;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        #addTaskButton {
+            width: 100%;
+            background-color: #17a2b8;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #addTaskButton:hover { background-color: #138496; }
+        #taskList {
+            list-style: none;
+            padding: 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        #taskList li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: rgba(255,255,255,0.1);
+            padding: 8px;
+            margin-bottom: 4px;
+            border-radius: 4px;
+        }
+        #taskList li.complete {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+        #examCountdown {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.65);
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 18px;
+            z-index: 50;
+        }
+        /* مشغل اليوتيوب للوفى والأصوات البيئية */
+        #ytContainer {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 320px;
+            height: 180px;
+            z-index: 60;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        @media (max-width: 768px) {
+            #quote { font-size: 24px; }
+            #timer { font-size: 54px; }
+            .controls button { font-size: 16px; padding: 8px 12px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- العداد التنازلى للامتحان -->
+    <div id="examCountdown">الوقت المتبقى حتى اختبار B2: <span id="examTime">-- يوم --:--:--</span></div>
+    <div class="overlay">
+        <div class="flex-container">
+            <!-- الجهة اليسرى: المؤقت والاقتباس -->
+            <div class="left-pane">
+                <div id="timerDisplay">
+                    <div id="timer">25:00</div>
+                    <div id="sessionCount">جلسات مكتملة: 0</div>
+                </div>
+                <div id="quote">اضغط على زر البدء لبدء جلسة بومودورو</div>
+                <!-- أزرار التحكم -->
+                <div class="controls">
+                    <button id="startButton" onclick="startSession()">ابدأ الجلسة</button>
+                    <button id="pauseButton" onclick="togglePause()">إيقاف مؤقت</button>
+                    <button id="soundButton" onclick="toggleSound()">تشغيل/إيقاف الصوت</button>
+                </div>
+            </div>
+            <!-- الجهة اليمنى: قائمة المهام -->
+            <div class="right-pane" id="todoSection">
+                <h3>قائمة المهام</h3>
+                <input id="taskInput" type="text" placeholder="أدخل مهمة جديدة...">
+                <button id="addTaskButton" onclick="addTask()">إضافة مهمة</button>
+                <ul id="taskList"></ul>
+            </div>
+        </div>
+    </div>
+    <!-- حاوية مشغل اليوتيوب -->
+    <div id="ytContainer">
+        <iframe id="ytPlayer" width="320" height="180" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+
+    <script>
+        /*
+         * الكود البرمجى لهذه اللوحة يستوحى أفضل مميزات منصات الإنتاجية المحترفة:
+         * - مؤقت بومودورو مع إمكانية الإيقاف المؤقت وعد الجلسات.
+         * - قائمة مهام قابلة للإضافة والحفظ فى تخزين المتصفح المحلى.
+         * - اقتباسات قرآنية، نبوية، عربية، إنجليزية، ألمانية تتجدد كل دقيقة.
+         * - خلفيات متغيرة مع حركة بطيئة (صور مظلمة + تدرجات لونية).
+         * - تشغيل صوتيات بيئية (مطر، أمواج، نار، لوفى) من يوتيوب عشوائياً.
+         * - عد تنازلى حتى موعد امتحان Goethe‑Zertifikat B2.
+         */
+
+        // خلفيات متحركة (صور مظلمة) مدمجة فى المجلد. يمكن إضافة المزيد.
+        const backgrounds = [
+            'c6d46d6b-6c13-41aa-b229-2d1aa6218706.png', // المحيط الليلى والقمر
+            '14d337fb-c7c1-4860-adef-ab8822e8c4c5.png', // سماء ليلية فوق الجبال
+            'e173c980-41c3-4d7d-952e-d2c7ff0c8e56.png', // غابة ضبابية ليلاً
+            '8a7262e6-c5e2-4a45-ab4d-677142593b83.png', // شارع ممطر فى المدينة
+            // تدرجات لونية كخيار بديل
+            'linear-gradient(135deg, #0d1b2a, #1b263b)',
+            'linear-gradient(135deg, #020024, #090979, #020024)',
+            'linear-gradient(135deg, #0f2027, #203a43, #2c5364)',
+            'linear-gradient(135deg, #000428, #004e92)'
+        ];
+
+        // قائمة اقتباسات (مجموعة مختصرة من الملف السابق – يمكن تكرارها لتصل إلى مئات)
+        const quotes = [
+            // آيات
+            'دكتور محمد، اقْرَأْ بِاسْمِ رَبِّكَ الَّذِي خَلَقَ... عَلَّمَ الْإِنسَانَ مَا لَمْ يَعْلَمْ',
+            'دكتور محمد، يَرْفَعِ اللهُ الَّذِينَ آمَنُوا مِنكُمْ وَالَّذِينَ أُوتُوا الْعِلْمَ دَرَجَاتٍ',
+            // أحاديث
+            'دكتور محمد، طَلَبُ الْعِلْمِ فَرِيضَةٌ عَلَى كُلِّ مُسْلِمٍ',
+            'دكتور محمد، مَنْ سَلَكَ طَرِيقًا يَلْتَمِسُ فِيهِ عِلْمًا سَهَّلَ اللَّهُ لَهُ طَرِيقًا إِلَى الْجَنَّةِ',
+            // عربية
+            'دكتور محمد، العلم نور والمذاكرة طريق النجاح.',
+            'دكتور محمد، الوقت هو الحياة؛ أحسن استغلاله.',
+            // إنجليزية
+            'Dr Mohamed, success is not final; failure is not fatal; it’s the courage to continue that counts.',
+            'Dr Mohamed, don’t stop until you’re proud.',
+            'Dr Mohamed, be stronger than your excuses.',
+            'Dr Mohamed, allow yourself to be a beginner; no one starts off being excellent.',
+            // ألمانية
+            'Dr Mohamed, Du schaffst es! – You can do it!',
+            'Dr Mohamed, Gib nicht auf! – Don’t give up!',
+            'Dr Mohamed, Auch aus Steinen, die einem in den Weg gelegt werden, kann man Schönes bauen.'
+        ];
+        // إذا أردت عدداً أكبر من الاقتباسات، قم بتكرار المصفوفة عدة مرات
+        while (quotes.length < 1000) {
+            quotes.push(...quotes);
+        }
+
+        // روابط قوائم تشغيل/فيديوهات يوتيوب لأصوات بيئية ولوفى. اخترنا أصوات أمواج، مطر، نار وLoFi.
+        const youtubeUrls = [
+            'https://www.youtube.com/embed/a8ZQBGdPOak?autoplay=1&loop=1&playlist=a8ZQBGdPOak', // صوت أمواج البحر + موسيقى هادئة
+            'https://www.youtube.com/embed/1ZYbU82GVz4?autoplay=1&loop=1&playlist=1ZYbU82GVz4', // Rain Sounds for Studying
+            'https://www.youtube.com/embed/8aY_Q_Bhu7g?autoplay=1&loop=1&playlist=8aY_Q_Bhu7g', // Crackling Fireplace
+            'https://www.youtube.com/embed/5qap5aO4i9A?autoplay=1&loop=1&playlist=5qap5aO4i9A'  // Lofi hip hop radio - Lofi Girl
+        ];
+
+        // متغيرات المؤقت
+        let sessionCount = 0;
+        let timerInterval;
+        let isPaused = false;
+        let remainingSeconds = 25 * 60; // 25 دقيقة
+        let quoteInterval;
+        let backgroundInterval;
+        let backgroundIndex = 0;
+        let soundPlaying = false;
+
+        // تحميل المهام المحفوظة من localStorage
+        function loadTasks() {
+            const stored = localStorage.getItem('studyTasks');
+            if (stored) {
+                try {
+                    const tasks = JSON.parse(stored);
+                    tasks.forEach(t => createTaskElement(t.text, t.complete));
+                } catch(err) {
+                    console.error('خطأ عند قراءة المهام:', err);
+                }
+            }
+        }
+        // حفظ المهام فى التخزين المحلى
+        function saveTasks() {
+            const items = [];
+            document.querySelectorAll('#taskList li').forEach(li => {
+                items.push({ text: li.querySelector('span').textContent, complete: li.classList.contains('complete') });
+            });
+            localStorage.setItem('studyTasks', JSON.stringify(items));
+        }
+        // إضافة مهمة جديدة
+        function addTask() {
+            const input = document.getElementById('taskInput');
+            const text = input.value.trim();
+            if (!text) return;
+            createTaskElement(text, false);
+            input.value = '';
+            saveTasks();
+        }
+        // إنشاء عنصر مهمة فى القائمة
+        function createTaskElement(text, complete) {
+            const ul = document.getElementById('taskList');
+            const li = document.createElement('li');
+            const span = document.createElement('span');
+            span.textContent = text;
+            li.appendChild(span);
+            const check = document.createElement('input');
+            check.type = 'checkbox';
+            check.checked = complete;
+            check.onchange = () => {
+                if (check.checked) li.classList.add('complete'); else li.classList.remove('complete');
+                saveTasks();
+            };
+            li.prepend(check);
+            const delBtn = document.createElement('button');
+            delBtn.textContent = 'حذف';
+            delBtn.style.marginLeft = '10px';
+            delBtn.style.background = '#dc3545';
+            delBtn.style.border = 'none';
+            delBtn.style.color = '#fff';
+            delBtn.style.padding = '4px 8px';
+            delBtn.style.borderRadius = '4px';
+            delBtn.onclick = () => {
+                li.remove();
+                saveTasks();
+            };
+            li.appendChild(delBtn);
+            if (complete) li.classList.add('complete');
+            ul.appendChild(li);
+        }
+
+        // بدء جلسة دراسة
+        function startSession() {
+            // إذا كان المؤقت يعمل بالفعل، تجاهل الأمر
+            if (timerInterval) return;
+            // إعادة تعيين الوقت إلى 25 دقيقة
+            remainingSeconds = 25 * 60;
+            isPaused = false;
+            document.getElementById('startButton').disabled = true;
+            document.getElementById('pauseButton').textContent = 'إيقاف مؤقت';
+            updateTimerDisplay();
+            // تشغيل اقتباس جديد كل دقيقة
+            displayRandomQuote();
+            if (quoteInterval) clearInterval(quoteInterval);
+            quoteInterval = setInterval(displayRandomQuote, 60 * 1000);
+            // تغيير الخلفية كل دقيقة
+            changeBackground();
+            if (backgroundInterval) clearInterval(backgroundInterval);
+            backgroundInterval = setInterval(changeBackground, 60 * 1000);
+            // بدء العد التنازلى
+            timerInterval = setInterval(() => {
+                if (!isPaused) {
+                    remainingSeconds--;
+                    if (remainingSeconds <= 0) {
+                        clearInterval(timerInterval);
+                        timerInterval = null;
+                        clearInterval(quoteInterval);
+                        // زيادة عداد الجلسات
+                        sessionCount++;
+                        document.getElementById('sessionCount').textContent = `جلسات مكتملة: ${sessionCount}`;
+                        // عرض رسالة انتهاء الجلسة
+                        document.getElementById('quote').textContent = 'انتهت الجلسة! أحسنت، خذ استراحة قصيرة.';
+                        document.getElementById('startButton').disabled = false;
+                        // بعد أربع جلسات متتالية، اقترح استراحة أطول
+                        if (sessionCount % 4 === 0) {
+                            alert('أربع جلسات متتالية! خذ استراحة أطول لاستعادة نشاطك.');
+                        }
+                    }
+                    updateTimerDisplay();
+                }
+            }, 1000);
+        }
+
+        // تحديث عرض الوقت
+        function updateTimerDisplay() {
+            const mins = Math.floor(remainingSeconds / 60).toString().padStart(2, '0');
+            const secs = (remainingSeconds % 60).toString().padStart(2, '0');
+            document.getElementById('timer').textContent = `${mins}:${secs}`;
+        }
+        // إيقاف/استئناف المؤقت
+        function togglePause() {
+            if (!timerInterval) return;
+            isPaused = !isPaused;
+            document.getElementById('pauseButton').textContent = isPaused ? 'استئناف' : 'إيقاف مؤقت';
+        }
+        // اختيار اقتباس عشوائى
+        function displayRandomQuote() {
+            const index = Math.floor(Math.random() * quotes.length);
+            document.getElementById('quote').textContent = quotes[index];
+        }
+        // تغيير خلفية الصفحة
+        function changeBackground() {
+            const bg = backgrounds[backgroundIndex % backgrounds.length];
+            backgroundIndex++;
+            if (bg.startsWith('linear-gradient')) {
+                document.body.style.backgroundImage = bg;
+            } else {
+                document.body.style.backgroundImage = `url('${bg}')`;
+            }
+        }
+        // تشغيل أو إيقاف الصوت
+        function toggleSound() {
+            const container = document.getElementById('ytContainer');
+            const player = document.getElementById('ytPlayer');
+            if (!soundPlaying) {
+                // اختيار رابط عشوائى
+                const url = youtubeUrls[Math.floor(Math.random() * youtubeUrls.length)];
+                player.src = url;
+                container.style.display = 'block';
+                soundPlaying = true;
+            } else {
+                player.src = '';
+                container.style.display = 'none';
+                soundPlaying = false;
+            }
+        }
+        // عداد الامتحان
+        function updateExamCountdown() {
+            const examDate = new Date('2025-08-27T00:00:00');
+            const now = new Date();
+            const diff = examDate - now;
+            if (diff <= 0) {
+                document.getElementById('examTime').textContent = 'حان موعد الامتحان!';
+                return;
+            }
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            document.getElementById('examTime').textContent = `${days} يوم ${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
+        }
+        // تحديث العد التنازلى كل ثانية
+        setInterval(updateExamCountdown, 1000);
+        updateExamCountdown();
+
+        // تحميل المهام عند فتح الصفحة
+        loadTasks();
+        // تغيير الخلفية والاقتباس عند تحميل الصفحة لأول مرة
+        changeBackground();
+        displayRandomQuote();
+    </script>
+</body>
+</html>
